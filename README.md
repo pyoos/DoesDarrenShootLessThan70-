@@ -20,5 +20,17 @@ A) List of files and information on them
     - This file is what sam started working on initially to try and start training models via datasets from Roboflow
     - I think initial step here was to make sure object recognition was capable and then extract data in the form
     - of stats or something (you can check gdrive word docs for more info)
-  5. 
+  5. real_time_tracking.py
+    - File that I was working on, basically opens up your webcam and allows for real time obeject tracking so far
+  6. index.html
+    - Casual index file for Frontend to complement object_detector.py
+    - Basically you can upload a file (right now its only image) and it should be able to
+  7. object_detector.py
+    - Right now this is just the backend to index file using Flask and Waitress as main hooked to index.html
+  8. trainon10kdataset
+    - This is the results of training the yolov8n.pt model on player_detect image dataset on roboflow
+    - https://universe.roboflow.com/test-datset/player_detect-0spfb/dataset/1#
 
+B) Additional info
+  1. Using Roboflow to store and annotate datasets (max is 10k)
+  2. Using Yolov8 as the model for object recognition

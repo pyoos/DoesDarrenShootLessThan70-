@@ -34,3 +34,15 @@ A) List of files and information on them
 B) Additional info
   1. Using Roboflow to store and annotate datasets (max is 10k)
   2. Using Yolov8 as the model for object recognition
+
+C) Goals and Objectives
+
+* I think this part is kinda skewed because there is a lot of different things that we could
+* individually be working on. Ref:https://docs.google.com/document/d/1pDzYFMRMvZSqZQ3SdJgpTsRecLP3V20EUDLnXgPnRg0/edit
+* link should have a list of all of the projects we were thinking about working on.
+
+  1. Image segmentation + Object detection
+  2. Real time video capture + Object detection
+  3. Extrapolating analysis from videos
+  4. Website + iOS app integration
+  5. LLM implementation for analysis + feedback

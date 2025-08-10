@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basketball Object Detection | pyoo.dev</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .upload-section {
+            border: 3px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .upload-section:hover, .upload-section.dragover {
+            border-color: #667eea;
+            background-color: #f8faff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .confidence-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .confidence-slider input {
+            flex: 1;
+        }
+
+        .preview-section {
+            margin-bottom: 30px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .results-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .detection-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .detection-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .detection-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .detection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .detection-class {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1e293b;
+        }
+
+        .confidence-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .confidence-high {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .confidence-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .confidence-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .detection-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .model-info {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .confidence-slider {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏀 Basketball Detection</h1>
+        <p>AI-powered basketball object detection system</p>
+    </div>
+
+    <div class="container">
+        <div class="model-info" id="modelInfo">
+            Loading model information...
+        </div>
+
+        <div class="error" id="errorMessage"></div>
+
+        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click to upload or drag and drop an image</div>
+            <div class="upload-hint">Supports JPG, PNG, GIF, WebP (max 10MB)</div>
+        </div>
+
+        <input type="file" id="fileInput" accept="image/*">
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="analyzeImage()">
+                🔍 Analyze Image
+            </button>
+            <button class="btn btn-secondary" onclick="clearResults()">
+                🗑️ Clear
+            </button>
+            <div class="confidence-slider">
+                <label>Confidence:</label>
+                <input type="range" id="confidenceSlider" min="0.1" max="1.0" step="0.05" value="0.25">
+                <span id="confidenceValue">0.25</span>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <img id="imagePreview" class="image-preview" alt="Preview">
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing image...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="results-header">
+                <div class="results-title">Detection Results</div>
+                <div class="results-stats">
+                    <span id="detectionCount">0 objects</span>
+                    <span id="processingTime">0ms</span>
+                </div>
+            </div>
+            <div class="detection-grid" id="detectionGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        let apiBaseUrl = window.location.origin;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadModelInfo();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // File input
+            document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+            
+            // Drag and drop
+            const uploadArea = document.querySelector('.upload-section');
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            
+            // Confidence slider
+            const slider = document.getElementById('confidenceSlider');
+            slider.addEventListener('input', function() {
+                document.getElementById('confidenceValue').textContent = this.value;
+            });
+        }
+
+        async function loadModelInfo() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/model-info`);
+                const info = await response.json();
+                
+                const modelInfoDiv = document.getElementById('modelInfo');
+                if (info.loaded) {
+                    modelInfoDiv.innerHTML = `
+                        ✅ <strong>${info.model_type}</strong> loaded successfully<br>
+                        📊 ${info.classes.length} classes: ${info.classes.join(', ')}<br>
+                        ⏱️ Load time: ${info.load_time.toFixed(2)}s
+                    `;
+                } else {
+                    modelInfoDiv.innerHTML = `❌ Model failed to load: ${info.error}`;
+                    modelInfoDiv.style.background = '#fee2e2';
+                    modelInfoDiv.style.borderColor = '#fecaca';
+                    modelInfoDiv.style.color = '#991b1b';
+                }
+            } catch (error) {
+                document.getElementById('modelInfo').innerHTML = `❌ Failed to connect to API: ${error.message}`;
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                displayPreview(file);
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                selectedFile = files[0];
+                displayPreview(selectedFile);
+            }
+        }
+
+        function displayPreview(file) {
+            const preview = document.getElementById('imagePreview');
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeImage() {
+            if (!selectedFile) {
+                showError('Please select an image first!');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const errorDiv = document.getElementById('errorMessage');
+            
+            // Show loading, hide results and errors
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            errorDiv.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+                
+                const confidence = document.getElementById('confidenceSlider').value;
+                const response = await fetch(`${apiBaseUrl}/api/detect?confidence=${confidence}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error);
+                }
+            } catch (error) {
+                showError(`Analysis failed: ${error.message}`);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            const results = document.getElementById('results');
+            const detectionGrid = document.getElementById('detectionGrid');
+            const detectionCount = document.getElementById('detectionCount');
+            const processingTime = document.getElementById('processingTime');
+
+            // Update stats
+            detectionCount.textContent = `${data.count} objects`;
+            processingTime.textContent = `${(data.processing_time * 1000).toFixed(0)}ms`;
+
+            // Clear previous results
+            detectionGrid.innerHTML = '';
+
+            if (data.detections.length === 0) {
+                detectionGrid.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;">No objects detected. Try lowering the confidence threshold.</div>';
+            } else {
+                data.detections.forEach((detection, index) => {
+                    const item = createDetectionItem(detection, index + 1);
+                    detectionGrid.appendChild(item);
+                });
+            }
+
+            results.style.display = 'block';
+        }
+
+        function createDetectionItem(detection, index) {
+            const div = document.createElement('div');
+            div.className = 'detection-item';
+
+            const confidenceClass = detection.confidence > 0.7 ? 'confidence-high' : 
+                                  detection.confidence > 0.5 ? 'confidence-medium' : 'confidence-low';
+
+            div.innerHTML = `
+                <div class="detection-header">
+                    <div class="detection-class">#${index} ${detection.class}</div>
+                    <div class="confidence-badge ${confidenceClass}">
+                        ${(detection.confidence * 100).toFixed(1)}%
+                    </div>
+                </div>
+                <div class="detection-details">
+                    <div><strong>Position:</strong> (${detection.bbox.x1}, ${detection.bbox.y1})</div>
+                    <div><strong>Size:</strong> ${detection.bbox.width}×${detection.bbox.height}</div>
+                    <div><strong>Area:</strong> ${detection.area.toLocaleString()}px²</div>
+                    <div><strong>Center:</strong> (${detection.bbox.center_x}, ${detection.bbox.center_y})</div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function clearResults() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 

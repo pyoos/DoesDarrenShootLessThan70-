@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basketball Object Detection - DDS70</title>
+    <style>
+        /* DDS70 Basketball Detection Widget Styles */
+        .dds70-widget {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 100%;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .dds70-widget * {
+            box-sizing: border-box;
+        }
+
+        .dds70-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .dds70-header h2 {
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .dds70-header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .dds70-content {
+            padding: 24px;
+        }
+
+        .dds70-status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dds70-status.success {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .dds70-status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .dds70-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .dds70-upload-area:hover,
+        .dds70-upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #f8faff;
+        }
+
+        .dds70-upload-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: #6b7280;
+        }
+
+        .dds70-upload-text {
+            color: #374151;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .dds70-upload-hint {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .dds70-file-input {
+            display: none;
+        }
+
+        .dds70-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .dds70-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dds70-btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .dds70-btn-primary:hover:not(:disabled) {
+            background: #2563eb;
+        }
+
+        .dds70-btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .dds70-btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .dds70-btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .dds70-confidence-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .dds70-confidence-control input {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .dds70-preview {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .dds70-preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .dds70-loading {
+            text-align: center;
+            padding: 32px;
+            display: none;
+        }
+
+        .dds70-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: dds70-spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes dds70-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .dds70-results {
+            display: none;
+        }
+
+        .dds70-results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dds70-results-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .dds70-results-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .dds70-detection-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .dds70-detection-item:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+
+        .dds70-detection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dds70-detection-class {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .dds70-confidence-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .dds70-confidence-high {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .dds70-confidence-medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .dds70-confidence-low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .dds70-detection-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .dds70-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 640px) {
+            .dds70-content {
+                padding: 16px;
+            }
+
+            .dds70-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .dds70-confidence-control {
+                min-width: auto;
+            }
+
+            .dds70-results-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .dds70-detection-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dds70-widget" id="dds70Widget">
+        <div class="dds70-header">
+            <h2>🏀 Basketball Object Detection</h2>
+            <p>AI-powered analysis of basketball images</p>
+        </div>
+
+        <div class="dds70-content">
+            <div class="dds70-status" id="dds70Status">
+                Loading system...
+            </div>
+
+            <div class="dds70-error" id="dds70Error"></div>
+
+            <div class="dds70-upload-area" id="dds70UploadArea">
+                <div class="dds70-upload-icon">📁</div>
+                <div class="dds70-upload-text">Click to upload or drag and drop an image</div>
+                <div class="dds70-upload-hint">Supports JPG, PNG, GIF, WebP (max 10MB)</div>
+                <input type="file" id="dds70FileInput" class="dds70-file-input" accept="image/*">
+            </div>
+
+            <div class="dds70-controls">
+                <button class="dds70-btn dds70-btn-primary" id="dds70AnalyzeBtn" disabled>
+                    🔍 Analyze Image
+                </button>
+                <button class="dds70-btn dds70-btn-secondary" id="dds70ClearBtn">
+                    🗑️ Clear
+                </button>
+                <div class="dds70-confidence-control">
+                    <label>Confidence:</label>
+                    <input type="range" id="dds70ConfidenceSlider" min="0.1" max="1.0" step="0.05" value="0.25">
+                    <span id="dds70ConfidenceValue">0.25</span>
+                </div>
+            </div>
+
+            <div class="dds70-preview">
+                <img id="dds70PreviewImage" alt="Preview">
+            </div>
+
+            <div class="dds70-loading" id="dds70Loading">
+                <div class="dds70-spinner"></div>
+                <p>Analyzing image...</p>
+            </div>
+
+            <div class="dds70-results" id="dds70Results">
+                <div class="dds70-results-header">
+                    <div class="dds70-results-title">Detection Results</div>
+                    <div class="dds70-results-stats">
+                        <span id="dds70DetectionCount">0 objects</span>
+                        <span id="dds70ProcessingTime">0ms</span>
+                    </div>
+                </div>
+                <div id="dds70DetectionGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            // Configuration - UPDATE THESE URLs FOR YOUR DEPLOYMENT
+            const API_BASE_URL = 'http://localhost:5000'; // Change to your API URL
+            
+            // Widget state
+            let selectedFile = null;
+            let isLoading = false;
+            
+            // DOM elements
+            const elements = {
+                widget: document.getElementById('dds70Widget'),
+                status: document.getElementById('dds70Status'),
+                error: document.getElementById('dds70Error'),
+                uploadArea: document.getElementById('dds70UploadArea'),
+                fileInput: document.getElementById('dds70FileInput'),
+                analyzeBtn: document.getElementById('dds70AnalyzeBtn'),
+                clearBtn: document.getElementById('dds70ClearBtn'),
+                confidenceSlider: document.getElementById('dds70ConfidenceSlider'),
+                confidenceValue: document.getElementById('dds70ConfidenceValue'),
+                previewImage: document.getElementById('dds70PreviewImage'),
+                loading: document.getElementById('dds70Loading'),
+                results: document.getElementById('dds70Results'),
+                detectionCount: document.getElementById('dds70DetectionCount'),
+                processingTime: document.getElementById('dds70ProcessingTime'),
+                detectionGrid: document.getElementById('dds70DetectionGrid')
+            };
+
+            // Initialize the widget
+            function init() {
+                setupEventListeners();
+                loadModelInfo();
+            }
+
+            function setupEventListeners() {
+                // File input
+                elements.fileInput.addEventListener('change', handleFileSelect);
+                
+                // Upload area
+                elements.uploadArea.addEventListener('click', () => elements.fileInput.click());
+                elements.uploadArea.addEventListener('dragover', handleDragOver);
+                elements.uploadArea.addEventListener('dragleave', handleDragLeave);
+                elements.uploadArea.addEventListener('drop', handleDrop);
+                
+                // Buttons
+                elements.analyzeBtn.addEventListener('click', analyzeImage);
+                elements.clearBtn.addEventListener('click', clearResults);
+                
+                // Confidence slider
+                elements.confidenceSlider.addEventListener('input', function() {
+                    elements.confidenceValue.textContent = this.value;
+                });
+            }
+
+            async function loadModelInfo() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/model-info`);
+                    const info = await response.json();
+                    
+                    if (info.loaded) {
+                        elements.status.className = 'dds70-status success';
+                        elements.status.innerHTML = `
+                            ✅ <strong>${info.model_type}</strong> ready
+                            <br><small>Classes: ${info.classes.join(', ')}</small>
+                        `;
+                    } else {
+                        elements.status.className = 'dds70-status error';
+                        elements.status.innerHTML = `❌ Model failed to load: ${info.error}`;
+                    }
+                } catch (error) {
+                    elements.status.className = 'dds70-status error';
+                    elements.status.innerHTML = `❌ Failed to connect to detection service`;
+                    console.error('Model info load error:', error);
+                }
+            }
+
+            function handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    setSelectedFile(file);
+                }
+            }
+
+            function handleDragOver(event) {
+                event.preventDefault();
+                elements.uploadArea.classList.add('dragover');
+            }
+
+            function handleDragLeave(event) {
+                event.preventDefault();
+                elements.uploadArea.classList.remove('dragover');
+            }
+
+            function handleDrop(event) {
+                event.preventDefault();
+                elements.uploadArea.classList.remove('dragover');
+                
+                const files = event.dataTransfer.files;
+                if (files.length > 0 && files[0].type.startsWith('image/')) {
+                    setSelectedFile(files[0]);
+                }
+            }
+
+            function setSelectedFile(file) {
+                selectedFile = file;
+                elements.analyzeBtn.disabled = false;
+                hideError();
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    elements.previewImage.src = e.target.result;
+                    elements.previewImage.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            async function analyzeImage() {
+                if (!selectedFile || isLoading) return;
+
+                setLoading(true);
+                hideError();
+                hideResults();
+
+                try {
+                    const formData = new FormData();
+                    formData.append('image', selectedFile);
+                    
+                    const confidence = elements.confidenceSlider.value;
+                    const response = await fetch(`${API_BASE_URL}/api/detect?confidence=${confidence}`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displayResults(data);
+                    } else {
+                        showError(data.error || 'Analysis failed');
+                    }
+                } catch (error) {
+                    showError(`Analysis failed: ${error.message}`);
+                    console.error('Analysis error:', error);
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            function displayResults(data) {
+                elements.detectionCount.textContent = `${data.count} objects`;
+                elements.processingTime.textContent = `${(data.processing_time * 1000).toFixed(0)}ms`;
+
+                elements.detectionGrid.innerHTML = '';
+
+                if (data.detections.length === 0) {
+                    elements.detectionGrid.innerHTML = `
+                        <div style="text-align: center; padding: 32px; color: #6b7280;">
+                            No objects detected. Try lowering the confidence threshold.
+                        </div>
+                    `;
+                } else {
+                    data.detections.forEach((detection, index) => {
+                        const item = createDetectionItem(detection, index + 1);
+                        elements.detectionGrid.appendChild(item);
+                    });
+                }
+
+                elements.results.style.display = 'block';
+            }
+
+            function createDetectionItem(detection, index) {
+                const div = document.createElement('div');
+                div.className = 'dds70-detection-item';
+
+                const confidenceClass = detection.confidence > 0.7 ? 'dds70-confidence-high' : 
+                                      detection.confidence > 0.5 ? 'dds70-confidence-medium' : 'dds70-confidence-low';
+
+                div.innerHTML = `
+                    <div class="dds70-detection-header">
+                        <div class="dds70-detection-class">#${index} ${detection.class}</div>
+                        <div class="dds70-confidence-badge ${confidenceClass}">
+                            ${(detection.confidence * 100).toFixed(1)}%
+                        </div>
+                    </div>
+                    <div class="dds70-detection-details">
+                        <div><strong>Position:</strong> (${detection.bbox.x1}, ${detection.bbox.y1})</div>
+                        <div><strong>Size:</strong> ${detection.bbox.width}×${detection.bbox.height}</div>
+                        <div><strong>Area:</strong> ${detection.area.toLocaleString()}px²</div>
+                        <div><strong>Center:</strong> (${detection.bbox.center_x}, ${detection.bbox.center_y})</div>
+                    </div>
+                `;
+
+                return div;
+            }
+
+            function clearResults() {
+                selectedFile = null;
+                elements.fileInput.value = '';
+                elements.previewImage.style.display = 'none';
+                elements.analyzeBtn.disabled = true;
+                hideResults();
+                hideError();
+            }
+
+            function setLoading(loading) {
+                isLoading = loading;
+                elements.loading.style.display = loading ? 'block' : 'none';
+                elements.analyzeBtn.disabled = loading || !selectedFile;
+            }
+
+            function showError(message) {
+                elements.error.textContent = message;
+                elements.error.style.display = 'block';
+            }
+
+            function hideError() {
+                elements.error.style.display = 'none';
+            }
+
+            function hideResults() {
+                elements.results.style.display = 'none';
+            }
+
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+        })();
+    </script>
+</body>
+</html> 

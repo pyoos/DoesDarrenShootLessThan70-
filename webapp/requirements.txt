@@ -2,8 +2,8 @@
 flask==3.0.0
 flask-cors==4.0.0
 
-# ML/AI Libraries 
-ultralytics==8.0.207
-
 # Image processing
-pillow==10.0.0 
+pillow==10.0.0
+
+# ML/AI Libraries (optional - app works without if import fails)
+ultralytics==8.0.207 

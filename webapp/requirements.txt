@@ -2,16 +2,8 @@
 flask==3.0.0
 flask-cors==4.0.0
 
-# ML/AI Libraries for Hobby plan
-torch==2.1.0
-torchvision==0.16.0
+# ML/AI Libraries 
 ultralytics==8.0.207
 
 # Image processing
-pillow==10.0.0
-opencv-python-headless==4.8.0
-numpy==1.24.0
-
-# Utilities
-pyyaml==6.0.0
-requests==2.31.0 
+pillow==10.0.0 

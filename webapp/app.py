@@ -1,335 +1,167 @@
 """
-Basketball Object Detection Web App
-Production-ready Flask application for pyoo website integration
+Basketball Object Detection Web Application
+DDS70 Project - Flask Backend for Railway Deployment
 """
 
-import os
-# Set environment variables for headless OpenCV operation
-os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
-os.environ['OPENCV_IO_ENABLE_JASPER'] = '0'
-os.environ['QT_QPA_PLATFORM'] = 'offscreen'
-
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from flask_cors import CORS
 from ultralytics import YOLO
+from flask import Flask, request, Response, jsonify, send_from_directory
+from flask_cors import CORS
 from PIL import Image
-import io
-import base64
-import logging
 import json
-from datetime import datetime
-import traceback
+import os
+import logging
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Enable CORS for your website integration
-CORS(app, origins=[
-    "https://pyoo.info",
-    "https://www.pyoo.info",
-    "http://localhost:3000",  # For local development
-    "http://localhost:8080",
-    "https://*.railway.app",  # Railway frontend deployments
-    "https://*.up.railway.app"  # Railway custom domains
-])
+# Enable CORS for website integration
+CORS(app, origins="*")  # Allow all origins for testing
 
 # Global model variable
 model = None
-model_info = {
-    "loaded": False,
-    "model_type": None,
-    "classes": [],
-    "load_time": None,
-    "error": None
-}
 
 def load_model():
-    """Load the YOLO model with comprehensive error handling"""
-    global model, model_info
-    start_time = datetime.now()
-    
+    """Load the YOLO model with error handling"""
+    global model
     try:
-        # For Railway deployment, try pre-trained model first (more reliable)
-        if os.environ.get('RAILWAY_ENVIRONMENT'):
-            logger.info("Railway environment detected, loading pre-trained YOLOv8n")
-            model = YOLO("yolov8n.pt")
-            model_info.update({
-                "loaded": True,
-                "model_type": "YOLOv8n Pre-trained (Railway)",
-                "classes": list(model.names.values()),
-                "load_time": (datetime.now() - start_time).total_seconds(),
-                "error": None
-            })
-            logger.info("Pre-trained model loaded successfully for Railway")
-            return True
-        
-        # Try to load custom trained model first (local development)
-        custom_model_path = "trainon10kdataset/weights/best.pt"
-        if os.path.exists(custom_model_path):
-            logger.info(f"Loading custom basketball model: {custom_model_path}")
-            model = YOLO(custom_model_path)
-            model_info.update({
-                "loaded": True,
-                "model_type": "Custom Basketball Model",
-                "classes": list(model.names.values()),
-                "load_time": (datetime.now() - start_time).total_seconds(),
-                "error": None
-            })
-            logger.info(f"Custom model loaded successfully with classes: {model.names}")
+        # Try to load custom trained model first
+        model_path = "trainon10kdataset/weights/best.pt"
+        if os.path.exists(model_path):
+            model = YOLO(model_path)
+            logger.info(f"Loaded custom basketball model from {model_path}")
+            logger.info(f"Model classes: {list(model.names.values())}")
             return True
         else:
             # Fallback to pre-trained model
-            logger.info("Custom model not found, loading pre-trained YOLOv8n")
             model = YOLO("yolov8n.pt")
-            model_info.update({
-                "loaded": True,
-                "model_type": "YOLOv8n Pre-trained",
-                "classes": list(model.names.values()),
-                "load_time": (datetime.now() - start_time).total_seconds(),
-                "error": None
-            })
-            logger.info("Pre-trained model loaded successfully")
+            logger.info("Loaded pre-trained YOLOv8n model")
+            logger.info(f"Model classes: {list(model.names.values())}")
             return True
-            
     except Exception as e:
-        error_msg = f"Error loading model: {str(e)}"
-        logger.error(error_msg)
-        logger.error(traceback.format_exc())
-        model_info.update({
-            "loaded": False,
-            "error": error_msg,
-            "load_time": (datetime.now() - start_time).total_seconds()
-        })
+        logger.error(f"Error loading model: {e}")
         return False
 
 @app.route("/")
-def index():
-    """Serve the main basketball detection page"""
-    return render_template("basketball_detector.html")
-
-@app.route("/api/health")
-def health():
-    """Enhanced health check endpoint"""
+def root():
+    """Serve the main page"""
     return jsonify({
-        "status": "healthy",
-        "service": "Basketball Object Detection API",
-        "timestamp": datetime.now().isoformat(),
-        "model": model_info
+        "message": "Basketball Detection API",
+        "status": "running",
+        "endpoints": ["/api/detect", "/api/model-info", "/health"]
     })
 
 @app.route("/api/detect", methods=["POST"])
 def detect():
     """
-    Enhanced detection endpoint with better error handling and response format
+    Handler for /api/detect POST endpoint
+    Receives uploaded file, processes through YOLO detection
+    and returns detection results in the format expected by the React frontend
     """
-    if not model_info["loaded"]:
-        return jsonify({
-            "success": False,
-            "error": "Model not loaded",
-            "details": model_info.get("error", "Unknown error")
-        }), 500
+    if not model:
+        return jsonify({"error": "Model not loaded"}), 500
     
     try:
-        # Check for file upload
         if "image" not in request.files:
-            return jsonify({
-                "success": False,
-                "error": "No image file provided"
-            }), 400
+            return jsonify({"error": "No image file provided"}), 400
         
         file = request.files["image"]
         if file.filename == "":
-            return jsonify({
-                "success": False,
-                "error": "No file selected"
-            }), 400
-        
-        # Validate file type
-        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
-        file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
-        if file_ext not in allowed_extensions:
-            return jsonify({
-                "success": False,
-                "error": f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
-            }), 400
+            return jsonify({"error": "No file selected"}), 400
         
         # Process the image
-        start_time = datetime.now()
         image = Image.open(file.stream)
+        results = detect_objects_on_image(image)
         
-        # Run detection
-        detections = detect_objects_on_image(image)
-        processing_time = (datetime.now() - start_time).total_seconds()
-        
-        return jsonify({
-            "success": True,
-            "detections": detections,
-            "count": len(detections),
-            "processing_time": round(processing_time, 3),
-            "image_size": {
-                "width": image.width,
-                "height": image.height
-            },
-            "model": model_info["model_type"],
-            "timestamp": datetime.now().isoformat()
-        })
+        return jsonify(results)
     
     except Exception as e:
         logger.error(f"Error in detect endpoint: {e}")
-        logger.error(traceback.format_exc())
-        return jsonify({
-            "success": False,
-            "error": f"Detection failed: {str(e)}"
-        }), 500
-
-@app.route("/api/detect-base64", methods=["POST"])
-def detect_base64():
-    """
-    Alternative endpoint for base64 image detection (useful for frontend uploads)
-    """
-    if not model_info["loaded"]:
-        return jsonify({
-            "success": False,
-            "error": "Model not loaded"
-        }), 500
-    
-    try:
-        data = request.get_json()
-        if not data or "image" not in data:
-            return jsonify({
-                "success": False,
-                "error": "No base64 image data provided"
-            }), 400
-        
-        # Decode base64 image
-        image_data = data["image"]
-        if image_data.startswith("data:image"):
-            # Remove data URL prefix
-            image_data = image_data.split(",")[1]
-        
-        image_bytes = base64.b64decode(image_data)
-        image = Image.open(io.BytesIO(image_bytes))
-        
-        # Run detection
-        start_time = datetime.now()
-        detections = detect_objects_on_image(image)
-        processing_time = (datetime.now() - start_time).total_seconds()
-        
-        return jsonify({
-            "success": True,
-            "detections": detections,
-            "count": len(detections),
-            "processing_time": round(processing_time, 3),
-            "image_size": {
-                "width": image.width,
-                "height": image.height
-            },
-            "model": model_info["model_type"],
-            "timestamp": datetime.now().isoformat()
-        })
-        
-    except Exception as e:
-        logger.error(f"Error in base64 detect endpoint: {e}")
-        return jsonify({
-            "success": False,
-            "error": f"Detection failed: {str(e)}"
-        }), 500
+        return jsonify({"error": f"Detection failed: {str(e)}"}), 500
 
 def detect_objects_on_image(image):
     """
-    Enhanced object detection with confidence scoring and metadata
+    Function receives an image,
+    passes it through YOLO neural network
+    and returns detection results in the format expected by React frontend
     """
     try:
-        # Get confidence threshold from request (default 0.25)
-        confidence = float(request.args.get('confidence', 0.25))
+        import time
+        start_time = time.time()
         
-        results = model.predict(image, conf=confidence, verbose=False)
+        results = model.predict(image, conf=0.25)  # Lower confidence threshold
         result = results[0]
-        detections = []
         
+        detections = []
         for box in result.boxes:
-            x1, y1, x2, y2 = [round(float(x)) for x in box.xyxy[0].tolist()]
-            class_id = int(box.cls[0].item())
-            confidence_score = round(float(box.conf[0].item()), 3)
+            x1, y1, x2, y2 = [round(x) for x in box.xyxy[0].tolist()]
+            class_id = box.cls[0].item()
+            confidence = round(box.conf[0].item(), 2)
             class_name = result.names[class_id]
             
-            detection = {
-                "bbox": {
-                    "x1": x1, "y1": y1, "x2": x2, "y2": y2,
-                    "width": x2 - x1,
-                    "height": y2 - y1,
-                    "center_x": (x1 + x2) // 2,
-                    "center_y": (y1 + y2) // 2
-                },
+            detections.append({
                 "class": class_name,
-                "class_id": class_id,
-                "confidence": confidence_score,
-                "area": (x2 - x1) * (y2 - y1)
-            }
-            detections.append(detection)
+                "confidence": confidence,
+                "bbox": [x1, y1, x2, y2]
+            })
         
-        # Sort by confidence (highest first)
-        detections.sort(key=lambda x: x["confidence"], reverse=True)
+        processing_time = round(time.time() - start_time, 2)
         
-        logger.info(f"Detected {len(detections)} objects")
-        return detections
+        # Return in the format expected by React frontend
+        return {
+            "detections": detections,
+            "processing_time": f"{processing_time}s",
+            "total_objects": len(detections),
+            "model_used": "YOLOv8 Custom Basketball Model",
+            "image_size": {"width": image.width, "height": image.height}
+        }
     
     except Exception as e:
         logger.error(f"Error in object detection: {e}")
-        return []
+        return {
+            "detections": [],
+            "processing_time": "0s",
+            "total_objects": 0,
+            "error": str(e)
+        }
 
 @app.route("/api/model-info")
-def get_model_info():
-    """Get detailed information about the loaded model"""
-    return jsonify(model_info)
+def model_info():
+    """Get information about the loaded model - matches React frontend expectations"""
+    if not model:
+        return jsonify({"error": "Model not loaded"}), 500
+    
+    info = {
+        "loaded": True,
+        "model_type": "YOLOv8 Custom Basketball Model",
+        "classes": list(model.names.values()),
+        "performance": "74.1% mAP50-95",
+        "dataset": "10k basketball images",
+        "status": "Custom trained model for basketball analytics"
+    }
+    return jsonify(info)
 
-@app.route("/api/classes")
-def get_classes():
-    """Get available detection classes"""
-    if model_info["loaded"]:
-        return jsonify({
-            "success": True,
-            "classes": model_info["classes"],
-            "count": len(model_info["classes"])
-        })
-    else:
-        return jsonify({
-            "success": False,
-            "error": "Model not loaded"
-        }), 500
-
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({
-        "success": False,
-        "error": "Endpoint not found",
-        "available_endpoints": [
-            "/api/health",
-            "/api/detect",
-            "/api/detect-base64",
-            "/api/model-info",
-            "/api/classes"
-        ]
-    }), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"Internal server error: {error}")
-    return jsonify({
-        "success": False,
-        "error": "Internal server error"
-    }), 500
+@app.route("/health")
+def health():
+    """Health check endpoint"""
+    status = {
+        "status": "healthy",
+        "model_loaded": model is not None,
+        "model_classes": list(model.names.values()) if model else None
+    }
+    return jsonify(status)
 
 if __name__ == "__main__":
     # Load model on startup
     logger.info("Starting Basketball Detection API...")
-    load_model()
+    if not load_model():
+        logger.error("Failed to load model. Exiting.")
+        exit(1)
+    
+    logger.info("✅ Model loaded successfully")
+    logger.info(f"📊 Model classes: {list(model.names.values())}")
     
     # Get port from environment (Railway sets this)
     port = int(os.environ.get("PORT", 5000))

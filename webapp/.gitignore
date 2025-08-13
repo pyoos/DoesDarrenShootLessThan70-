@@ -29,10 +29,14 @@ Thumbs.db
 logs/
 
 # Large datasets (exclude if not needed)
-# trainon10kdataset/train/
-# trainon10kdataset/val/
+trainon10kdataset/train/
+trainon10kdataset/val/
+trainon10kdataset/*.jpg
+trainon10kdataset/*.png
+trainon10kdataset/*.csv
 
 # Keep only the model weights
-# trainon10kdataset/*
-# !trainon10kdataset/weights/
-# !trainon10kdataset/weights/best.pt 
+trainon10kdataset/*
+!trainon10kdataset/weights/
+!trainon10kdataset/weights/best.pt
+!trainon10kdataset/weights/last.pt 

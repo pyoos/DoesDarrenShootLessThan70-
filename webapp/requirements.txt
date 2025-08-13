@@ -1,21 +1,15 @@
 # Core Web Framework
 flask>=3.0.0
 flask-cors>=4.0.0
-waitress>=3.0.0
 
-# ML/AI Libraries
+# Lightweight ML stack for Railway
+torch>=2.1.0+cpu
+torchvision>=0.16.0+cpu
 ultralytics>=8.0.207
-torch>=2.1.0
-torchvision>=0.16.0
 pillow>=10.0.0
-opencv-python>=4.8.0
+opencv-python-headless>=4.8.0
 numpy>=1.24.0
 
-# Additional dependencies
-dill>=0.3.8
+# Essential only
 pyyaml>=6.0.0
-requests>=2.31.0
-
-# Production utilities
-gunicorn>=21.0.0
-python-dotenv>=1.0.0 
+requests>=2.31.0 

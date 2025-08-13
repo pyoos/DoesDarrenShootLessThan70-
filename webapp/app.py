@@ -26,10 +26,12 @@ app = Flask(__name__)
 
 # Enable CORS for your website integration
 CORS(app, origins=[
-    "https://pyoo.dev",
-    "https://www.pyoo.dev", 
+    "https://pyoo.info",
+    "https://www.pyoo.info",
     "http://localhost:3000",  # For local development
-    "http://localhost:8080"
+    "http://localhost:8080",
+    "https://*.railway.app",  # Railway frontend deployments
+    "https://*.up.railway.app"  # Railway custom domains
 ])
 
 # Global model variable
@@ -48,8 +50,22 @@ def load_model():
     start_time = datetime.now()
     
     try:
-        # Try to load custom trained model first
-        custom_model_path = "../trainon10kdataset/weights/best.pt"
+        # For Railway deployment, try pre-trained model first (more reliable)
+        if os.environ.get('RAILWAY_ENVIRONMENT'):
+            logger.info("Railway environment detected, loading pre-trained YOLOv8n")
+            model = YOLO("yolov8n.pt")
+            model_info.update({
+                "loaded": True,
+                "model_type": "YOLOv8n Pre-trained (Railway)",
+                "classes": list(model.names.values()),
+                "load_time": (datetime.now() - start_time).total_seconds(),
+                "error": None
+            })
+            logger.info("Pre-trained model loaded successfully for Railway")
+            return True
+        
+        # Try to load custom trained model first (local development)
+        custom_model_path = "trainon10kdataset/weights/best.pt"
         if os.path.exists(custom_model_path):
             logger.info(f"Loading custom basketball model: {custom_model_path}")
             model = YOLO(custom_model_path)
@@ -306,24 +322,17 @@ def internal_error(error):
     }), 500
 
 if __name__ == "__main__":
-    print("🏀 Basketball Detection API for pyoo.dev")
-    print("=" * 50)
+    # Load model on startup
+    logger.info("Starting Basketball Detection API...")
+    load_model()
     
-    # Load the model
-    if not load_model():
-        print("❌ Failed to load model. Starting with limited functionality.")
-    else:
-        print(f"✅ Model loaded: {model_info['model_type']}")
-        print(f"📊 Classes: {len(model_info['classes'])}")
-        print(f"⏱️  Load time: {model_info['load_time']:.2f}s")
+    # Get port from environment (Railway sets this)
+    port = int(os.environ.get("PORT", 5000))
     
-    print("🌐 Starting API server...")
-    print("📡 CORS enabled for pyoo.dev integration")
-    
-    # Run the development server
+    # Run the app
+    logger.info(f"Starting server on port {port}")
     app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # Set to False for production
-        threaded=True
+        host="0.0.0.0",  # Required for Railway
+        port=port,
+        debug=False  # Set to False for production
     ) 

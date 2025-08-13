@@ -1,0 +1,46 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Development files
+demo.py
+sandbox.ipynb
+quickstart.ipynb
+*.ipynb
+
+# Integration examples
+integration/
+
+# Display images
+display.png
+
+# Temporary files
+*.tmp
+*.temp 

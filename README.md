@@ -50,11 +50,9 @@ python demo.py
 - **`webapp/`** - Production-ready Flask API with Railway deployment fixes
   - **`app.py`** - Production Flask application with fallback demo mode
   - **`requirements.txt`** - Optimized dependencies with opencv-python-headless
-  - **`nixpacks.toml`** - Railway build configuration with OpenCV system libraries
-  - **`Dockerfile`** - Docker deployment option with all dependencies
 - **Root deployment files** - Railway configuration files at project root
-  - **`railway.json`** - Railway service configuration
-  - **`nixpacks.toml`** - System dependency configuration
+  - **`railway.json`** - Railway service configuration (Docker)
+  - **`Dockerfile`** - Docker deployment with minimal dependencies
   - **`Procfile`** - Process configuration
   - **`.railwayignore`** - Excludes unnecessary files from deployment
 
@@ -90,10 +88,10 @@ The project now includes fixes for the OpenCV `libGL.so.1` error on Railway:
 ### Key Fixes Applied:
 - ✅ **Moved YOLO import inside try-catch** to prevent startup crashes
 - ✅ **Added opencv-python-headless** instead of regular opencv-python
-- ✅ **System dependencies** in nixpacks.toml (libGL, mesa, etc.)
+- ✅ **Docker deployment** with minimal system dependencies
 - ✅ **Graceful fallback** to demo mode if YOLO fails to load
 - ✅ **Proper environment variables** for headless operation
-- ✅ **Docker alternative** available if Nixpacks fails
+- ✅ **Simplified deployment** using reliable Docker approach
 
 ### Expected Behavior:
 - If YOLO loads successfully → **Real basketball detection**

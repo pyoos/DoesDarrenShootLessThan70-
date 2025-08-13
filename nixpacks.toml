@@ -15,4 +15,4 @@ cmds = [
 cmds = ['echo "Build complete"']
 
 [start]
-cmd = 'cd webapp && python app.py' 
+cmd = 'bash -c "cd webapp && python app.py"' 

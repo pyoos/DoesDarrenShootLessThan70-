@@ -1,1 +1,1 @@
-web: cd webapp && python app.py 
+web: bash -c "cd webapp && python app.py" 

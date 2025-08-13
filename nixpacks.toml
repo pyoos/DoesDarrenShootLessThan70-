@@ -1,6 +1,14 @@
 [phases.setup]
 nixPkgs = [
-  'python311'
+  'python311',
+  'libGL',
+  'libglib',
+  'xorg.libSM',
+  'xorg.libXext',
+  'xorg.libXrender',
+  'libgomp',
+  'mesa',
+  'pkg-config'
 ]
 
 [phases.install]

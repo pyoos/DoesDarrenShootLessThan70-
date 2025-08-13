@@ -13,6 +13,9 @@ os.environ['DISPLAY'] = ''
 os.environ['OPENCV_VIDEOIO_PRIORITY_MSMF'] = '0'
 os.environ['OPENCV_VIDEOIO_DEBUG'] = '0'
 os.environ['MPLBACKEND'] = 'Agg'
+# Force Mesa/software rendering
+os.environ['LIBGL_ALWAYS_SOFTWARE'] = '1'
+os.environ['GALLIUM_DRIVER'] = 'softpipe'
 
 from flask import Flask, request, Response, jsonify, send_from_directory
 from flask_cors import CORS

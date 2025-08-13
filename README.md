@@ -46,6 +46,18 @@ python demo.py
   - **Classes**: Basketball courts, ball, made shots, person, rim, shoot
   - **Dataset**: 10k images from [Roboflow](https://universe.roboflow.com/test-datset/player_detect-0spfb/dataset/1#)
 
+### Production Deployment
+- **`webapp/`** - Production-ready Flask API with Railway deployment fixes
+  - **`app.py`** - Production Flask application with fallback demo mode
+  - **`requirements.txt`** - Optimized dependencies with opencv-python-headless
+  - **`nixpacks.toml`** - Railway build configuration with OpenCV system libraries
+  - **`Dockerfile`** - Docker deployment option with all dependencies
+- **Root deployment files** - Railway configuration files at project root
+  - **`railway.json`** - Railway service configuration
+  - **`nixpacks.toml`** - System dependency configuration
+  - **`Procfile`** - Process configuration
+  - **`.railwayignore`** - Excludes unnecessary files from deployment
+
 ## 🛠️ Technical Stack
 
 - **Object Detection**: YOLOv8 (Nano, Small, Medium variants)
@@ -66,10 +78,32 @@ python demo.py
 - [x] **Professional UI/UX** with modern design
 - [x] **Model performance metrics** and visualizations
 
+## 🚀 Railway Deployment (Fixed)
+
+The project now includes fixes for the OpenCV `libGL.so.1` error on Railway:
+
+### Quick Deploy to Railway:
+1. **Connect Repository**: Link your GitHub repo to Railway
+2. **Automatic Detection**: Railway will detect the configuration files
+3. **Deploy**: The app will build with proper OpenCV support
+
+### Key Fixes Applied:
+- ✅ **Moved YOLO import inside try-catch** to prevent startup crashes
+- ✅ **Added opencv-python-headless** instead of regular opencv-python
+- ✅ **System dependencies** in nixpacks.toml (libGL, mesa, etc.)
+- ✅ **Graceful fallback** to demo mode if YOLO fails to load
+- ✅ **Proper environment variables** for headless operation
+- ✅ **Docker alternative** available if Nixpacks fails
+
+### Expected Behavior:
+- If YOLO loads successfully → **Real basketball detection**
+- If YOLO fails to load → **Smart demo mode** (still functional!)
+- Both modes provide identical API responses for frontend integration
+
 ## 🎯 Future Enhancements
 
 - [ ] **Advanced video analysis** with shot tracking
-- [ ] **iOS/Mobile app** integration
+- [ ] **iOS/Mobile app** integration  
 - [ ] **LLM integration** for analysis and feedback
 - [ ] **Player performance statistics**
 - [ ] **Shot accuracy analytics**

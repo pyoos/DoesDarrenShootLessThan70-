@@ -1,0 +1,52 @@
+# Jupyter notebooks (not needed for deployment)
+*.ipynb
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+env/
+venv/
+.venv/
+.env
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+.gitignore
+
+# Documentation (optional - uncomment if you want to exclude)
+# README.md
+# *.md
+
+# Development files
+demo.py
+sandbox.ipynb
+quickstart.ipynb
+
+# Large training files that aren't needed for webapp
+# Keep trainon10kdataset folder but exclude large training images
+trainon10kdataset/train_batch*.jpg
+trainon10kdataset/val_batch*.jpg
+trainon10kdataset/*.png
+trainon10kdataset/*.jpg
+
+# Integration examples (not needed for deployment)
+integration/
+
+# Display images
+display.png
+
+# Keep the webapp folder and its contents
+!webapp/
+!webapp/** 

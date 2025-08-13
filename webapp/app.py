@@ -9,6 +9,10 @@ os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
 os.environ['OPENCV_IO_ENABLE_JASPER'] = '0'
 os.environ['QT_QPA_PLATFORM'] = 'offscreen'
 os.environ['DISPLAY'] = ''
+# Additional OpenCV headless settings
+os.environ['OPENCV_VIDEOIO_PRIORITY_MSMF'] = '0'
+os.environ['OPENCV_VIDEOIO_DEBUG'] = '0'
+os.environ['MPLBACKEND'] = 'Agg'
 
 from flask import Flask, request, Response, jsonify, send_from_directory
 from flask_cors import CORS
@@ -20,16 +24,32 @@ import random
 
 # Try to import YOLO with proper error handling
 YOLO_AVAILABLE = False
+YOLO = None
 model = None
 
-try:
-    from ultralytics import YOLO
-    YOLO_AVAILABLE = True
-    print("✅ YOLO imported successfully")
-except ImportError as e:
-    print(f"⚠️ YOLO import failed: {e}")
-    print("🎭 Running in enhanced demo mode")
-    YOLO_AVAILABLE = False
+def import_yolo():
+    """Import YOLO only when needed to avoid startup failures"""
+    global YOLO_AVAILABLE, YOLO
+    
+    if YOLO is not None:
+        return True
+        
+    try:
+        from ultralytics import YOLO as YOLOClass
+        YOLO = YOLOClass
+        YOLO_AVAILABLE = True
+        print("✅ YOLO imported successfully")
+        return True
+    except ImportError as e:
+        print(f"⚠️ YOLO import failed: {e}")
+        print("🎭 Running in enhanced demo mode")
+        YOLO_AVAILABLE = False
+        return False
+    except Exception as e:
+        print(f"⚠️ YOLO import error: {e}")
+        print("🎭 Running in enhanced demo mode")
+        YOLO_AVAILABLE = False
+        return False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,9 +69,10 @@ CORS(app, origins=[
 
 def load_model():
     """Load the YOLO model with error handling"""
-    global model
+    global model, YOLO_AVAILABLE
     
-    if not YOLO_AVAILABLE:
+    # Try to import YOLO first
+    if not import_yolo():
         logger.info("YOLO not available - running in enhanced demo mode")
         return True  # Return success for demo mode
     
@@ -71,7 +92,9 @@ def load_model():
             return True
     except Exception as e:
         logger.error(f"Error loading model: {e}")
-        return False
+        # Mark YOLO as unavailable and continue in demo mode
+        YOLO_AVAILABLE = False
+        return True
 
 @app.route("/")
 def root():

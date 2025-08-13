@@ -148,11 +148,25 @@ The API automatically tries to load models in this order:
 }
 ```
 
-### Railway
+### Railway (Fixed for OpenCV Issues)
 
+The app now includes fixes for OpenCV deployment issues on Railway:
+
+**Option 1: Using Nixpacks (Recommended)**
 1. Connect your GitHub repo to Railway
-2. Set environment variables
+2. The included `nixpacks.toml` will handle system dependencies
 3. Deploy automatically
+
+**Option 2: Using Docker**
+1. Railway will detect the `Dockerfile` and build automatically
+2. Includes all necessary OpenCV system libraries
+3. More reliable for complex dependencies
+
+**Important Notes:**
+- The app now gracefully falls back to demo mode if YOLO/OpenCV fails to load
+- Uses `opencv-python-headless` to avoid GUI dependencies
+- Includes proper environment variables for headless operation
+- Railway deployment should now work without the `libGL.so.1` error
 
 ### DigitalOcean App Platform
 

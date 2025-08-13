@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "bash -c 'cd webapp && python app.py'"
+    "startCommand": "python webapp/app.py"
   }
 } 

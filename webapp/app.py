@@ -78,8 +78,20 @@ def load_model():
     
     try:
         # Try to load custom trained model first
-        model_path = "trainon10kdataset/weights/best.pt"
-        if os.path.exists(model_path):
+        # Handle both running from webapp/ and from root directory
+        model_paths = [
+            "trainon10kdataset/weights/best.pt",  # When run from webapp/
+            "../trainon10kdataset/weights/best.pt",  # When run from webapp/ but model is in parent
+            "webapp/trainon10kdataset/weights/best.pt"  # When run from root
+        ]
+        
+        model_path = None
+        for path in model_paths:
+            if os.path.exists(path):
+                model_path = path
+                break
+        
+        if model_path:
             model = YOLO(model_path)
             logger.info(f"Loaded custom basketball model from {model_path}")
             logger.info(f"Model classes: {list(model.names.values())}")
@@ -322,6 +334,17 @@ def health():
 if __name__ == "__main__":
     # Load model on startup
     logger.info("Starting Basketball Detection API...")
+    
+    # Debug: Show current directory and file structure
+    import os
+    logger.info(f"Current working directory: {os.getcwd()}")
+    logger.info(f"Files in current directory: {os.listdir('.')}")
+    if os.path.exists('webapp'):
+        logger.info(f"Files in webapp/: {os.listdir('webapp')}")
+    if os.path.exists('trainon10kdataset'):
+        logger.info(f"trainon10kdataset exists in current directory")
+    if os.path.exists('webapp/trainon10kdataset'):
+        logger.info(f"trainon10kdataset exists in webapp/")
     
     if load_model():
         if YOLO_AVAILABLE and model:

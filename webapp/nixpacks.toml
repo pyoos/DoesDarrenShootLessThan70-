@@ -1,10 +1,19 @@
 [phases.setup]
-nixPkgs = ['python39']
+nixPkgs = [
+  'python39',
+  'libGL',
+  'libglib',
+  'glib',
+  'libSM',
+  'libXext',
+  'libXrender',
+  'libgomp'
+]
 
 [phases.install]
 cmds = ['pip install -r requirements.txt']
 
-[phases.build]
+[phases.build]  
 cmds = ['echo "Build complete"']
 
 [start]

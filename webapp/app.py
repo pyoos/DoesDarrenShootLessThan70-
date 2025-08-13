@@ -3,11 +3,16 @@ Basketball Object Detection Web App
 Production-ready Flask application for pyoo website integration
 """
 
+import os
+# Set environment variables for headless OpenCV operation
+os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '0'
+os.environ['OPENCV_IO_ENABLE_JASPER'] = '0'
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'
+
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 from ultralytics import YOLO
 from PIL import Image
-import os
 import io
 import base64
 import logging

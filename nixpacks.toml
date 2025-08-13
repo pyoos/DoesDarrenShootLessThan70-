@@ -1,9 +1,6 @@
 [phases.setup]
 nixPkgs = [
-  'python311',
-  'libGL',
-  'glib',
-  'libgomp'
+  'python311'
 ]
 
 [phases.install]

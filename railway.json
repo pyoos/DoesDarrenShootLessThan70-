@@ -4,6 +4,6 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "python webapp/app.py"
+    "startCommand": "python app.py"
   }
 } 

@@ -7,11 +7,11 @@ nixPkgs = [
 cmds = [
   'pip install --upgrade pip',
   'pip install --no-cache-dir opencv-python-headless==4.8.1.78',
-  'pip install --no-cache-dir -r webapp/requirements.txt'
+  'pip install --no-cache-dir -r requirements.txt'
 ]
 
 [phases.build]  
 cmds = ['echo "Build complete"']
 
 [start]
-cmd = 'python webapp/app.py' 
+cmd = 'python app.py' 

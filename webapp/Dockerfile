@@ -1,26 +1,8 @@
 # Use Python 3.11 slim image
 FROM python:3.11-slim
 
-# Install system dependencies for OpenCV and YOLO
-RUN apt-get update && apt-get install -y \
-    libgl1-mesa-dri \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    libgomp1 \
-    libfontconfig1 \
-    libglu1-mesa \
-    libxi6 \
-    libxrandr2 \
-    libxss1 \
-    libxcursor1 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxfixes3 \
-    libxinerama1 \
-    libfreetype6 \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies for OpenCV and YOLO - Stack Overflow solution
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
 
 # Set working directory
 WORKDIR /app

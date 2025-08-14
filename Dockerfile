@@ -4,19 +4,11 @@ FROM python:3.11-slim
 # Install system dependencies for OpenCV and YOLO
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
-    libgl1-mesa-dri \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     libgomp1 \
-    libgstreamer1.0-0 \
-    libgstreamer-plugins-base1.0-0 \
-    libavcodec58 \
-    libavformat58 \
-    libavutil56 \
-    libswscale5 \
-    libgtk-3-0 \
     libfontconfig1 \
     libglu1-mesa \
     libxi6 \
@@ -26,15 +18,8 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxfixes3 \
-    libcairo-gobject2 \
     libxinerama1 \
     libfreetype6 \
-    libxft2 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
-    libffi-dev \
-    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
